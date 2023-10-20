@@ -43,10 +43,6 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-wandb.init(
-    project="cifar10-unlearn", entity="yliu298", config=vars(args), mode=args.wandb
-)
-
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 torch.manual_seed(args.seed)
 if DEVICE == "cuda":
@@ -56,12 +52,16 @@ torch.backends.cudnn.benchmark = True
 
 train_dataset, test_dataset = get_cifar10()
 train_dataset, val_dataset, _, _ = prepare_splits(train_dataset)
-wandb.log(
+config = vars(args)
+config.extend(
     {
         "train_size": len(train_dataset),
         "val_size": len(val_dataset),
         "test_size": len(test_dataset),
     }
+)
+wandb.init(
+    project="cifar10-unlearn", entity="yliu298", config=vars(args), mode=args.wandb
 )
 
 train_loader = DataLoader(
