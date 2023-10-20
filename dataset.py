@@ -32,13 +32,15 @@ def prepare_splits(train_dataset):
     forget_indices = rand_indices[num_val + num_retain :]
     train_indices = torch.cat([retain_indices, forget_indices])
 
-    # Make sure no overlap between retain and forget
+    # Ensure no overlap between train and val
+    assert len(set(train_indices.tolist()) & set(val_indices.tolist())) == 0
+    # Ensure no overlap between retain and forget
     assert len(set(retain_indices.tolist()) & set(forget_indices.tolist())) == 0
-    # Make sure all retain are in train
+    # Ensure all retain are in train
     assert len(set(train_indices.tolist()) - set(retain_indices.tolist())) == num_forget
-    # Make sure all forget are in train
+    # Ensure all forget are in train
     assert len(set(train_indices.tolist()) - set(forget_indices.tolist())) == num_retain
-    # Assert retain + forget == train
+    # Ensure retain + forget == train
     assert train_indices.tolist() == retain_indices.tolist() + forget_indices.tolist()
 
     train_dataset_split = Subset(train_dataset, train_indices)
