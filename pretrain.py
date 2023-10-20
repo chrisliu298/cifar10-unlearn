@@ -90,7 +90,7 @@ optimizer = torch.optim.SGD(
 )
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
 
-for epoch in range(args.epochs):
+for epoch in trange(args.epochs):
     wandb.log({"lr": scheduler.get_last_lr()[0]})
 
     net.train()
