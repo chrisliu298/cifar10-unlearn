@@ -46,13 +46,4 @@ def prepare_splits(train_dataset):
     retain_dataset = Subset(train_dataset, retain_indices)
     forget_dataset = Subset(train_dataset, forget_indices)
 
-    print(
-        {
-            "train": len(train_dataset_split),
-            "val": len(val_dataset),
-            "retain": len(retain_dataset),
-            "forget": len(forget_dataset),
-        }
-    )
-
     return train_dataset_split, val_dataset, retain_dataset, forget_dataset

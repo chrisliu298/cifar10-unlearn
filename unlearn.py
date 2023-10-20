@@ -63,6 +63,15 @@ torch.backends.cudnn.benchmark = True
 
 train_dataset, test_dataset = get_cifar10()
 _, val_dataset, retain_dataset, forget_dataset = prepare_splits(train_dataset)
+wandb.log(
+    {
+        "train_size": len(train_dataset),
+        "val_size": len(val_dataset),
+        "retain_size": len(retain_dataset),
+        "forget_size": len(forget_dataset),
+        "test_size": len(test_dataset),
+    }
+)
 
 val_loader = DataLoader(
     val_dataset,
