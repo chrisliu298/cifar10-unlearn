@@ -18,7 +18,7 @@ def train(net, optimizer, criterion, scheduler, loader, device):
         acc += (logits.argmax(dim=-1) == y).float().mean().item()
         wandb.log({"grad_norm": grad_norm(net), "weight_norm": weight_norm(net)})
     loss /= len(loader)
-    loss /= len(loader)
+    acc /= len(loader)
     scheduler.step()
     return loss, acc
 
