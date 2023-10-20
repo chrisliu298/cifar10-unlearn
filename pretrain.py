@@ -132,6 +132,7 @@ for epoch in trange(args.epochs):
 
     wandb.log(
         {
+            "epoch": epoch,
             "train_loss_epoch": train_loss_epoch,
             "train_acc_epoch": train_acc_epoch,
             "test_loss_epoch": test_loss_epoch,
