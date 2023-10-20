@@ -5,7 +5,7 @@ from torchvision.models import resnet18
 def get_resnet18(num_classes=10):
     net = resnet18(weights=None, num_classes=num_classes)
     net.conv1 = nn.Conv2d(
-        1, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+        3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
     )
     return net
 
