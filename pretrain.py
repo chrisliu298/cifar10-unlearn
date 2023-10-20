@@ -84,8 +84,6 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epo
 
 for epoch in range(args.epochs):
     wandb.log({"lr": scheduler.get_last_lr()[0]})
-    wandb.log({"weight_norm": weight_norm(net)})
-    wandb.log({"grad_norm": grad_norm(net)})
 
     net.train()
     train_acc_epoch, train_loss_epoch, test_acc_epoch, test_loss_epoch = 0, 0, 0, 0
@@ -103,6 +101,9 @@ for epoch in range(args.epochs):
         )
         train_loss_epoch += train_loss_step
         train_acc_epoch += train_acc_step
+
+        wandb.log({"weight_norm": weight_norm(net)})
+        wandb.log({"grad_norm": grad_norm(net)})
 
     train_loss_epoch /= len(train_loader)
     train_acc_epoch /= len(train_loader)
