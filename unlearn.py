@@ -8,7 +8,7 @@ from tqdm import trange
 
 from dataset import get_cifar10, prepare_splits
 from model import get_cnn, get_resnet18
-from utils import grad_norm, weight_norm
+from trainer import evaluate, train
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -17,6 +17,13 @@ parser.add_argument(
     default="cnn",
     choices=["cnn", "resnet18"],
     help="model (default: cnn)",
+)
+parser.add_argument(
+    "--unlearn_method",
+    type=str,
+    default="finetune",
+    choices=["finetune", "gradient_ascent"],
+    help="unlearn method (default: finetune)",
 )
 parser.add_argument("--seed", type=int, default=42, help="random seed (default: 42)")
 parser.add_argument(
@@ -93,8 +100,8 @@ elif args.model == "resnet18":
 else:
     raise ValueError(f"Unknown model: {args.model}. Please choose from cnn, resnet18.")
 
+net.to(DEVICE)
 net.load_state_dict(torch.load("pretrained.pt"))
-net = net.to(DEVICE)
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(
     net.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.wd
@@ -103,68 +110,19 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epo
 
 for epoch in trange(args.epochs):
     wandb.log({"lr": scheduler.get_last_lr()[0]})
-
-    net.train()
-    test_acc_epoch, test_loss_epoch = 0, 0
-    retain_acc_epoch, retain_loss_epoch = 0, 0
-    forget_acc_epoch, forget_loss_epoch = 0, 0
-    for x, y in forget_loader:
-        x, y = x.to(DEVICE), y.to(DEVICE)
-        optimizer.zero_grad(set_to_none=True)
-        logits = net(x)
-        loss = -criterion(logits, y)
-        loss.backward()
-        optimizer.step()
-        forget_loss_step = loss.item()
-        forget_acc_step = (logits.argmax(dim=-1) == y).float().mean().item()
-        wandb.log(
-            {"forget_loss_step": forget_loss_step, "forget_acc_step": forget_acc_step}
-        )
-        forget_loss_epoch += forget_loss_step
-        forget_acc_epoch += forget_acc_step
-
-        wandb.log({"weight_norm": weight_norm(net)})
-        wandb.log({"grad_norm": grad_norm(net)})
-
-    forget_loss_epoch /= len(forget_loader)
-    forget_acc_epoch /= len(forget_loader)
-
-    net.eval()
-    with torch.no_grad():
-        for x, y in retain_loader:
-            x, y = x.to(DEVICE), y.to(DEVICE)
-            logits = net(x)
-            loss = criterion(logits, y)
-            retain_loss_step = loss.item()
-            retain_acc_step = (logits.argmax(dim=-1) == y).float().mean().item()
-            retain_loss_epoch += retain_loss_step
-            retain_acc_epoch += retain_acc_step
-
-        for x, y in test_loader:
-            x, y = x.to(DEVICE), y.to(DEVICE)
-            logits = net(x)
-            loss = criterion(logits, y)
-            test_loss_step = loss.item()
-            test_acc_step = (logits.argmax(dim=-1) == y).float().mean().item()
-            test_loss_epoch += test_loss_step
-            test_acc_epoch += test_acc_step
-
-    retain_loss_epoch /= len(retain_loader)
-    retain_acc_epoch /= len(retain_loader)
-    test_loss_epoch /= len(test_loader)
-    test_acc_epoch /= len(test_loader)
-
+    retain_loss, retain_acc = train(net, optimizer, criterion, scheduler, retain_loader)
+    forget_loss, forget_acc = evaluate(net, criterion, forget_loader)
+    test_loss, test_acc = evaluate(net, criterion, test_loader)
     wandb.log(
         {
             "epoch": epoch,
-            "retain_loss_epoch": retain_loss_epoch,
-            "retain_acc_epoch": retain_acc_epoch,
-            "forget_loss_epoch": forget_loss_epoch,
-            "forget_acc_epoch": forget_acc_epoch,
-            "test_loss_epoch": test_loss_epoch,
-            "test_acc_epoch": test_acc_epoch,
+            "retain_loss": retain_loss,
+            "retain_acc": retain_acc,
+            "forget_loss": forget_loss,
+            "forget_acc": forget_acc,
+            "test_loss": test_loss,
+            "test_acc": test_acc,
         }
     )
-    scheduler.step()
 
 wandb.finish(quiet=True)

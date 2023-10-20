@@ -8,7 +8,7 @@ from tqdm import trange
 
 from dataset import get_cifar10, prepare_splits
 from model import get_cnn, get_resnet18
-from utils import grad_norm, weight_norm
+from trainer import evaluate, train
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -83,7 +83,7 @@ elif args.model == "resnet18":
 else:
     raise ValueError(f"Unknown model: {args.model}. Please choose from cnn, resnet18.")
 
-net = net.to(DEVICE)
+net.to(DEVICE)
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(
     net.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.wd
@@ -92,55 +92,20 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epo
 
 for epoch in trange(args.epochs):
     wandb.log({"lr": scheduler.get_last_lr()[0]})
-
-    net.train()
-    train_acc_epoch, train_loss_epoch, test_acc_epoch, test_loss_epoch = 0, 0, 0, 0
-    for x, y in train_loader:
-        x, y = x.to(DEVICE), y.to(DEVICE)
-        optimizer.zero_grad(set_to_none=True)
-        logits = net(x)
-        loss = criterion(logits, y)
-        loss.backward()
-        optimizer.step()
-        train_loss_step = loss.item()
-        train_acc_step = (logits.argmax(dim=-1) == y).float().mean().item()
-        wandb.log(
-            {"train_loss_step": train_loss_step, "train_acc_step": train_acc_step}
-        )
-        train_loss_epoch += train_loss_step
-        train_acc_epoch += train_acc_step
-
-        wandb.log({"weight_norm": weight_norm(net)})
-        wandb.log({"grad_norm": grad_norm(net)})
-
-    train_loss_epoch /= len(train_loader)
-    train_acc_epoch /= len(train_loader)
-
-    net.eval()
-    with torch.no_grad():
-        for x, y in test_loader:
-            x, y = x.to(DEVICE), y.to(DEVICE)
-            logits = net(x)
-            loss = criterion(logits, y)
-            test_loss_step = loss.item()
-            test_acc_step = (logits.argmax(dim=-1) == y).float().mean().item()
-            test_loss_epoch += test_loss_step
-            test_acc_epoch += test_acc_step
-
-    test_loss_epoch /= len(test_loader)
-    test_acc_epoch /= len(test_loader)
-
+    retain_loss, retain_acc = train(net, optimizer, criterion, scheduler, train_loader)
+    val_loss, val_acc = evaluate(net, criterion, val_loader)
+    test_loss, test_acc = evaluate(net, criterion, test_loader)
     wandb.log(
         {
             "epoch": epoch,
-            "train_loss_epoch": train_loss_epoch,
-            "train_acc_epoch": train_acc_epoch,
-            "test_loss_epoch": test_loss_epoch,
-            "test_acc_epoch": test_acc_epoch,
+            "retain_loss": retain_loss,
+            "retain_acc": retain_acc,
+            "val_loss": val_loss,
+            "val_acc": val_acc,
+            "test_loss": test_loss,
+            "test_acc": test_acc,
         }
     )
-    scheduler.step()
-
 torch.save(net.state_dict(), f"pretrained.pt")
 wandb.save("pretrained.pt")
 wandb.finish(quiet=True)
