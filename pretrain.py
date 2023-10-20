@@ -53,7 +53,7 @@ torch.backends.cudnn.benchmark = True
 train_dataset, test_dataset = get_cifar10()
 train_dataset, val_dataset, _, _ = prepare_splits(train_dataset)
 config = vars(args)
-config.extend(
+config.update(
     {
         "train_size": len(train_dataset),
         "val_size": len(val_dataset),
