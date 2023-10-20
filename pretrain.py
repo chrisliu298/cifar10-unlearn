@@ -18,7 +18,7 @@ parser.add_argument(
     choices=["cnn", "resnet18"],
     help="model (default: cnn)",
 )
-parser.add_argument("--seed", type=int, default=42, help="random seed (default: 42)")
+parser.add_argument("--seed", type=int, default=1, help="random seed (default: 1)")
 parser.add_argument(
     "--lr", type=float, default=1e-1, help="learning rate (default: 1e-1)"
 )

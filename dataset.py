@@ -21,7 +21,7 @@ def get_cifar10():
     return train_dataset, test_dataset
 
 
-@ControlledSeed(42)
+@ControlledSeed(0)
 def prepare_splits(train_dataset):
     dataset_len = len(train_dataset)
     rand_indices = torch.randperm(dataset_len)

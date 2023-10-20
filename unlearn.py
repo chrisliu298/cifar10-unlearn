@@ -25,7 +25,7 @@ parser.add_argument(
     choices=["finetune", "gradient_ascent"],
     help="unlearn method (default: finetune)",
 )
-parser.add_argument("--seed", type=int, default=42, help="random seed (default: 42)")
+parser.add_argument("--seed", type=int, default=2, help="random seed (default: 2)")
 parser.add_argument(
     "--lr", type=float, default=1e-1, help="learning rate (default: 1e-1)"
 )
