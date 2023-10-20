@@ -98,7 +98,6 @@ optimizer = torch.optim.SGD(
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
 
 for epoch in trange(args.epochs):
-    wandb.log({"lr": scheduler.get_last_lr()[0]})
     train_loss, train_acc = train(
         net, optimizer, criterion, scheduler, train_loader, DEVICE
     )
@@ -113,6 +112,7 @@ for epoch in trange(args.epochs):
             "val_acc": val_acc,
             "test_loss": test_loss,
             "test_acc": test_acc,
+            "lr": scheduler.get_last_lr()[0],
         }
     )
 torch.save(net.state_dict(), f"pretrained.pt")

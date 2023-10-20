@@ -123,7 +123,6 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epo
 train_loader = retain_loader if args.unlearn_method == "finetune" else forget_loader
 
 for epoch in trange(args.epochs):
-    wandb.log({"lr": scheduler.get_last_lr()[0]})
     train(net, optimizer, train_criterion, scheduler, train_loader, DEVICE)
 
     retain_loss, retain_acc = evaluate(net, test_criterion, retain_loader, DEVICE)
@@ -142,6 +141,7 @@ for epoch in trange(args.epochs):
             "val_acc": val_acc,
             "test_loss": test_loss,
             "test_acc": test_acc,
+            "lr": scheduler.get_last_lr()[0],
         }
     )
 
