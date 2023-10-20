@@ -58,7 +58,9 @@ torch.backends.cudnn.deterministic = False
 torch.backends.cudnn.benchmark = True
 
 train_dataset, test_dataset = get_cifar10()
-_, val_dataset, retain_dataset, forget_dataset = prepare_splits(train_dataset)
+train_dataset, val_dataset, retain_dataset, forget_dataset = prepare_splits(
+    train_dataset
+)
 config = vars(args)
 config.update(
     {
@@ -73,6 +75,13 @@ wandb.init(
     project="cifar10-unlearn", entity="yliu298", config=vars(args), mode=args.wandb
 )
 
+train_loader = DataLoader(
+    train_dataset,
+    batch_size=args.batch_size,
+    shuffle=True,
+    num_workers=args.num_workers,
+    pin_memory=True,
+)
 val_loader = DataLoader(
     val_dataset,
     batch_size=args.batch_size,
@@ -119,6 +128,22 @@ optimizer = torch.optim.SGD(
     net.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.wd
 )
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+
+# Evaluate on all splits before training
+_, train_acc = evaluate(net, test_criterion, train_loader, DEVICE)
+_, val_acc = evaluate(net, test_criterion, val_loader, DEVICE)
+_, test_acc = evaluate(net, test_criterion, test_loader, DEVICE)
+_, retain_acc = evaluate(net, test_criterion, retain_loader, DEVICE)
+_, forget_acc = evaluate(net, test_criterion, forget_loader, DEVICE)
+print(
+    {
+        "train_acc": train_acc,
+        "val_acc": val_acc,
+        "test_acc": test_acc,
+        "retain_acc": retain_acc,
+        "forget_acc": forget_acc,
+    }
+)
 
 train_loader = retain_loader if args.unlearn_method == "finetune" else forget_loader
 
