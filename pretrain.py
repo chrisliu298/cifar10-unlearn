@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import wandb
 from torch.utils.data import DataLoader
+from tqdm import trange
 
 from dataset import get_cifar10, prepare_splits
 from model import get_cnn, get_resnet18
@@ -33,10 +34,17 @@ parser.add_argument(
 parser.add_argument(
     "--num_workers", type=int, default=8, help="num workers (default: 8)"
 )
+parser.add_argument(
+    "--wandb",
+    type=str,
+    default="offline",
+    choices=["online", "offline"],
+    help="wandb mode (default: offline)",
+)
 args = parser.parse_args()
 
 wandb.init(
-    project="cifar10-unlearn", entity="yliu298", config=vars(args), mode="offline"
+    project="cifar10-unlearn", entity="yliu298", config=vars(args), mode=args.wandb
 )
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
