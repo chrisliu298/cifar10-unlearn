@@ -111,19 +111,26 @@ else:
 
 net.to(DEVICE)
 net.load_state_dict(torch.load("pretrained.pt"))
-criterion = nn.CrossEntropyLoss()
+train_criterion = nn.CrossEntropyLoss()
+if args.unlearn_method == "gradient_ascent":
+    train_criterion = lambda logits, y: -train_criterion(logits, y)
+test_criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(
     net.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.wd
 )
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
 
+train_loader = retain_loader if args.unlearn_method == "finetune" else forget_loader
+
 for epoch in trange(args.epochs):
     wandb.log({"lr": scheduler.get_last_lr()[0]})
-    retain_loss, retain_acc = train(
-        net, optimizer, criterion, scheduler, retain_loader, DEVICE
-    )
-    forget_loss, forget_acc = evaluate(net, criterion, forget_loader, DEVICE)
-    test_loss, test_acc = evaluate(net, criterion, test_loader, DEVICE)
+    train(net, optimizer, train_criterion, scheduler, train_loader, DEVICE)
+
+    retain_loss, retain_acc = evaluate(net, test_criterion, retain_loader, DEVICE)
+    forget_loss, forget_acc = evaluate(net, test_criterion, forget_loader, DEVICE)
+    val_loss, val_acc = evaluate(net, test_criterion, val_loader, DEVICE)
+    test_loss, test_acc = evaluate(net, test_criterion, test_loader, DEVICE)
+
     wandb.log(
         {
             "epoch": epoch,
@@ -131,6 +138,8 @@ for epoch in trange(args.epochs):
             "retain_acc": retain_acc,
             "forget_loss": forget_loss,
             "forget_acc": forget_acc,
+            "val_loss": val_loss,
+            "val_acc": val_acc,
             "test_loss": test_loss,
             "test_acc": test_acc,
         }
