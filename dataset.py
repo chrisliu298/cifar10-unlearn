@@ -39,7 +39,7 @@ def prepare_splits(train_dataset):
     # Make sure all forget are in train
     assert len(set(train_indices.tolist()) - set(forget_indices.tolist())) == num_retain
     # Assert retain + forget == train
-    assert len(set(train_indices.tolist())) == num_retain + num_forget
+    assert train_indices.tolist() == retain_indices.tolist() + forget_indices.tolist()
 
     train_dataset_split = Subset(train_dataset, train_indices)
     val_dataset = Subset(train_dataset, val_indices)
