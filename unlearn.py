@@ -21,9 +21,9 @@ parser.add_argument(
 parser.add_argument(
     "--unlearn_method",
     type=str,
-    default="finetune",
-    choices=["finetune", "gradient_ascent"],
-    help="unlearn method (default: finetune)",
+    default="ft",
+    choices=["ft", "ga"],
+    help="unlearn method (default: ft)",
 )
 parser.add_argument("--seed", type=int, default=2, help="random seed (default: 2)")
 parser.add_argument(
@@ -145,7 +145,7 @@ print(
     }
 )
 
-train_loader = retain_loader if args.unlearn_method == "finetune" else forget_loader
+train_loader = retain_loader if args.unlearn_method == "ft" else forget_loader
 
 for epoch in trange(args.epochs):
     train(net, optimizer, train_criterion, scheduler, train_loader, DEVICE)
