@@ -121,7 +121,7 @@ else:
 net.to(DEVICE)
 net.load_state_dict(torch.load("pretrained.pt"))
 train_criterion = nn.CrossEntropyLoss()
-if args.unlearn_method == "gradient_ascent":
+if args.unlearn_method == "ga":
     train_criterion = lambda logits, y: -nn.CrossEntropyLoss()(logits, y)
 test_criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(
