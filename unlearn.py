@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 
 import torch
 import torch.nn as nn
@@ -124,6 +125,7 @@ else:
     raise ValueError(f"Unknown model: {args.model}. Please choose from cnn, resnet18.")
 
 net.to(DEVICE)
+assert os.path.exists("pretrained.pt"), "pretrained.pt does not exist!"
 net.load_state_dict(torch.load("pretrained.pt"))
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(
