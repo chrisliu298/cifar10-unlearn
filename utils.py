@@ -73,6 +73,19 @@ def assign_rand_labels(loader):
     return rand_loader
 
 
+def assign_second_best_labels(net, loader, device):
+    with torch.no_grad():
+        net.eval()
+        new_loader = deepcopy(loader)
+        for x, y in new_loader:
+            x, y = x.to(device), y.to(device)
+            logits = net(x)
+            _, indices = logits.topk(2, dim=1)
+            second_best_labels = indices[:, 1]
+            y[:] = second_best_labels
+        return new_loader
+
+
 def time_to_id():
     # Get the current time in nanoseconds
     nanoseconds = int(time.time() * 1e9)

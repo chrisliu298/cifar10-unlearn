@@ -9,9 +9,9 @@ from torch.utils.data import DataLoader
 from tqdm import trange
 
 from dataset import get_cifar10, prepare_splits
-from methods import finetune, gradient_ascent, rand_labels, retrain
+from methods import finetune, gradient_ascent, rand_labels, retrain, second_best_labels
 from model import get_cnn, get_resnet18
-from utils import assign_rand_labels, evaluate, time_to_id
+from utils import assign_rand_labels, assign_second_best_labels, evaluate, time_to_id
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -31,7 +31,13 @@ parser.add_argument(
 parser.add_argument(
     "--unlearn_method",
     type=str,
-    choices=["retrain", "finetune", "gradient_ascent", "rand_labels"],
+    choices=[
+        "retrain",
+        "finetune",
+        "gradient_ascent",
+        "rand_labels",
+        "second_best_labels",
+    ],
     required=True,
     help="unlearn method (default: finetune)",
 )
@@ -160,6 +166,12 @@ logging.debug(
 
 if args.unlearn_method == "rand_labels":
     rand_forget_loader = assign_rand_labels(forget_loader)
+    print(next(iter(forget_loader))[1])
+    print(next(iter(rand_forget_loader))[1])
+elif args.unlearn_method == "second_best_labels":
+    second_best_forget_loader = assign_second_best_labels(net, forget_loader, DEVICE)
+    print(next(iter(forget_loader))[1])
+    print(next(iter(second_best_forget_loader))[1])
 
 for epoch in trange(args.epochs):
     if args.unlearn_method == "retrain":
@@ -170,6 +182,10 @@ for epoch in trange(args.epochs):
         gradient_ascent(net, optimizer, criterion, scheduler, forget_loader, DEVICE)
     elif args.unlearn_method == "rand_labels":
         rand_labels(net, optimizer, criterion, scheduler, rand_forget_loader, DEVICE)
+    elif args.unlearn_method == "second_best_labels":
+        second_best_labels(
+            net, optimizer, criterion, scheduler, second_best_forget_loader, DEVICE
+        )
 
     retain_loss, retain_acc = evaluate(net, criterion, retain_loader, DEVICE)
     forget_loss, forget_acc = evaluate(net, criterion, forget_loader, DEVICE)

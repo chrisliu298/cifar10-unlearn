@@ -53,3 +53,7 @@ def gradient_ascent(net, optimizer, criterion, scheduler, loader, device):
 
 def rand_labels(net, optimizer, criterion, scheduler, loader, device):
     train(net, optimizer, criterion, scheduler, loader, device)
+
+
+def second_best_labels(net, optimizer, criterion, scheduler, loader, device):
+    train(net, optimizer, criterion, scheduler, loader, device)
