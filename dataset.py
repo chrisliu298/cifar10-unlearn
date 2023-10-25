@@ -21,12 +21,12 @@ def get_cifar10():
     return train_dataset, test_dataset
 
 
-@ControlledSeed(0)
+@ControlledSeed(10)
 def prepare_splits(train_dataset):
     dataset_len = len(train_dataset)
     rand_indices = torch.randperm(dataset_len)
 
-    num_val, num_retain, num_forget = 5000, 40000, 5000
+    num_val, num_retain, num_forget = 5000, 44000, 1000
     val_indices = rand_indices[:num_val]
     retain_indices = rand_indices[num_val : num_val + num_retain]
     forget_indices = rand_indices[num_val + num_retain :]

@@ -25,7 +25,6 @@ parser.add_argument(
     choices=["ft", "ga", "rl"],
     help="unlearn method (default: ft)",
 )
-# parser.add_argument("--seed", type=int, default=2, help="random seed (default: 2)")
 parser.add_argument(
     "--lr", type=float, default=1e-1, help="learning rate (default: 1e-1)"
 )
@@ -51,9 +50,6 @@ parser.add_argument(
 args = parser.parse_args()
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-# torch.manual_seed(args.seed)
-# if DEVICE == "cuda":
-#     torch.cuda.manual_seed(args.seed)
 torch.backends.cudnn.deterministic = False
 torch.backends.cudnn.benchmark = True
 
