@@ -1,4 +1,6 @@
 import random
+import time
+from copy import deepcopy
 from functools import wraps
 
 import numpy as np
@@ -41,3 +43,37 @@ def weight_norm(net):
 def grad_norm(net):
     grads = torch.cat([p.grad.view(-1) for p in net.parameters() if p.grad is not None])
     return torch.norm(grads, p=2).item()
+
+
+@torch.no_grad()
+def evaluate(net, criterion, loader, device):
+    net.eval()
+    loss, acc = 0, 0
+    for x, y in loader:
+        x, y = x.to(device), y.to(device)
+        logits = net(x)
+        loss = criterion(logits, y)
+        loss += loss.item()
+        acc += (logits.argmax(dim=-1) == y).float().mean().item()
+    loss /= len(loader)
+    acc /= len(loader)
+    return loss, acc
+
+
+def assign_rand_labels(loader):
+    forget_labels = torch.cat([y for _, y in loader])
+    rand_loader = deepcopy(loader)
+
+    for _, y in rand_loader:
+        y[:] = torch.randint_like(y, 0, 10)
+
+    rand_forget_labels = torch.cat([y for _, y in rand_loader])
+    acc = (forget_labels == rand_forget_labels).float().mean().item()
+    print(f"Random accuracy: {acc:.4f}")
+    return rand_loader
+
+
+def time_to_id():
+    # Get the current time in nanoseconds
+    nanoseconds = int(time.time() * 1e9)
+    return str(nanoseconds)

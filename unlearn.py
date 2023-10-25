@@ -1,4 +1,5 @@
 import argparse
+import logging
 
 import torch
 import torch.nn as nn
@@ -7,23 +8,31 @@ from torch.utils.data import DataLoader
 from tqdm import trange
 
 from dataset import get_cifar10, prepare_splits
+from methods import finetune, gradient_ascent, rand_labels, retrain
 from model import get_cnn, get_resnet18
-from trainer import evaluate, train
+from utils import assign_rand_labels, evaluate, time_to_id
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    force=True,
+    filename=f"{time_to_id()}.log",
+)
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--model",
     type=str,
-    default="cnn",
     choices=["cnn", "resnet18"],
+    required=True,
     help="model (default: cnn)",
 )
 parser.add_argument(
     "--unlearn_method",
     type=str,
-    default="ft",
-    choices=["ft", "ga", "rl"],
-    help="unlearn method (default: ft)",
+    choices=["retrain", "finetune", "gradient_ascent", "rand_labels"],
+    required=True,
+    help="unlearn method (default: finetune)",
 )
 parser.add_argument(
     "--lr", type=float, default=1e-1, help="learning rate (default: 1e-1)"
@@ -116,21 +125,18 @@ else:
 
 net.to(DEVICE)
 net.load_state_dict(torch.load("pretrained.pt"))
-train_criterion = nn.CrossEntropyLoss()
-if args.unlearn_method == "ga":
-    train_criterion = lambda logits, y: -nn.CrossEntropyLoss()(logits, y)
-test_criterion = nn.CrossEntropyLoss()
+criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(
     net.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.wd
 )
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
 
 # Evaluate on all splits before training
-_, train_acc = evaluate(net, test_criterion, train_loader, DEVICE)
-_, val_acc = evaluate(net, test_criterion, val_loader, DEVICE)
-_, test_acc = evaluate(net, test_criterion, test_loader, DEVICE)
-_, retain_acc = evaluate(net, test_criterion, retain_loader, DEVICE)
-_, forget_acc = evaluate(net, test_criterion, forget_loader, DEVICE)
+_, train_acc = evaluate(net, criterion, train_loader, DEVICE)
+_, val_acc = evaluate(net, criterion, val_loader, DEVICE)
+_, test_acc = evaluate(net, criterion, test_loader, DEVICE)
+_, retain_acc = evaluate(net, criterion, retain_loader, DEVICE)
+_, forget_acc = evaluate(net, criterion, forget_loader, DEVICE)
 print(
     {
         "train_acc": train_acc,
@@ -140,30 +146,21 @@ print(
         "forget_acc": forget_acc,
     }
 )
-
-train_loader = retain_loader if args.unlearn_method == "ft" else forget_loader
-if args.unlearn_method == "rl":
-    from copy import deepcopy
-
-    forget_labels = torch.cat([y for _, y in forget_loader])
-
-    rand_forget_loader = deepcopy(forget_loader)
-    for x, y in rand_forget_loader:
-        y[:] = torch.randint_like(y, 0, 10)
-
-    rand_forget_labels = torch.cat([y for _, y in rand_forget_loader])
-    acc = (forget_labels == rand_forget_labels).float().mean().item()
-    print(f"Random accuracy: {acc:.4f}")
-    train_loader = rand_forget_loader
-
-print(f"train_loader size: {len(train_loader.dataset)}")
 for epoch in trange(args.epochs):
-    train(net, optimizer, train_criterion, scheduler, train_loader, DEVICE)
+    if args.unlearn_method == "retrain":
+        retrain(net, optimizer, criterion, scheduler, retain_loader, DEVICE)
+    elif args.unlearn_method == "finetune":
+        finetune(net, optimizer, criterion, scheduler, retain_loader, DEVICE)
+    elif args.unlearn_method == "gradient_ascent":
+        gradient_ascent(net, optimizer, criterion, scheduler, forget_loader, DEVICE)
+    elif args.unlearn_method == "rand_labels":
+        rand_forget_loader = assign_rand_labels(forget_loader)
+        rand_labels(net, optimizer, criterion, scheduler, rand_forget_loader, DEVICE)
 
-    retain_loss, retain_acc = evaluate(net, test_criterion, retain_loader, DEVICE)
-    forget_loss, forget_acc = evaluate(net, test_criterion, forget_loader, DEVICE)
-    val_loss, val_acc = evaluate(net, test_criterion, val_loader, DEVICE)
-    test_loss, test_acc = evaluate(net, test_criterion, test_loader, DEVICE)
+    retain_loss, retain_acc = evaluate(net, criterion, retain_loader, DEVICE)
+    forget_loss, forget_acc = evaluate(net, criterion, forget_loader, DEVICE)
+    val_loss, val_acc = evaluate(net, criterion, val_loader, DEVICE)
+    test_loss, test_acc = evaluate(net, criterion, test_loader, DEVICE)
 
     wandb.log(
         {

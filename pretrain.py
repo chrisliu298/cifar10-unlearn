@@ -7,8 +7,9 @@ from torch.utils.data import DataLoader
 from tqdm import trange
 
 from dataset import get_cifar10, prepare_splits
+from methods import train
 from model import get_cnn, get_resnet18
-from trainer import evaluate, train
+from utils import evaluate
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
