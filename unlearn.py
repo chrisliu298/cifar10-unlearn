@@ -158,7 +158,9 @@ if args.unlearn_method == "rl":
     rand_forget_labels = torch.cat([y for _, y in rand_forget_loader])
     acc = (forget_labels == rand_forget_labels).float().mean().item()
     print(f"Random accuracy: {acc:.4f}")
+    train_loader = rand_forget_loader
 
+print(f"train_loader size: {len(train_loader.dataset)}")
 for epoch in trange(args.epochs):
     train(net, optimizer, train_criterion, scheduler, train_loader, DEVICE)
 
