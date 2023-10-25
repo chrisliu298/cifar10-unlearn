@@ -79,6 +79,15 @@ config.update(
 )
 wandb.init(project="cifar10-unlearn", entity="yliu298", config=config, mode=args.wandb)
 logging.info(config)
+logging.debug(
+    {
+        "train_size": len(train_dataset),
+        "val_size": len(val_dataset),
+        "test_size": len(test_dataset),
+        "retain_size": len(retain_dataset),
+        "forget_size": len(forget_dataset),
+    }
+)
 
 train_loader = DataLoader(
     train_dataset,
@@ -145,15 +154,6 @@ logging.debug(
         "test_acc": test_acc,
         "retain_acc": retain_acc,
         "forget_acc": forget_acc,
-    }
-)
-logging.debug(
-    {
-        "train_size": len(train_dataset.dataset),
-        "val_size": len(val_dataset.dataset),
-        "test_size": len(test_dataset.dataset),
-        "retain_size": len(retain_dataset.dataset),
-        "forget_size": len(forget_dataset.dataset),
     }
 )
 
