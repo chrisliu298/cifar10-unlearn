@@ -77,9 +77,8 @@ config.update(
         "test_size": len(test_dataset),
     }
 )
-wandb.init(
-    project="cifar10-unlearn", entity="yliu298", config=vars(args), mode=args.wandb
-)
+wandb.init(project="cifar10-unlearn", entity="yliu298", config=config, mode=args.wandb)
+logging.info(config)
 
 train_loader = DataLoader(
     train_dataset,
@@ -139,13 +138,22 @@ _, val_acc = evaluate(net, criterion, val_loader, DEVICE)
 _, test_acc = evaluate(net, criterion, test_loader, DEVICE)
 _, retain_acc = evaluate(net, criterion, retain_loader, DEVICE)
 _, forget_acc = evaluate(net, criterion, forget_loader, DEVICE)
-print(
+logging.debug(
     {
         "train_acc": train_acc,
         "val_acc": val_acc,
         "test_acc": test_acc,
         "retain_acc": retain_acc,
         "forget_acc": forget_acc,
+    }
+)
+logging.debug(
+    {
+        "train_size": len(train_dataset.dataset),
+        "val_size": len(val_dataset.dataset),
+        "test_size": len(test_dataset.dataset),
+        "retain_size": len(retain_dataset.dataset),
+        "forget_size": len(forget_dataset.dataset),
     }
 )
 

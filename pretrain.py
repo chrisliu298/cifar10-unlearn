@@ -1,4 +1,5 @@
 import argparse
+import logging
 
 import torch
 import torch.nn as nn
@@ -9,7 +10,14 @@ from tqdm import trange
 from dataset import get_cifar10, prepare_splits
 from methods import train
 from model import get_cnn, get_resnet18
-from utils import evaluate
+from utils import evaluate, time_to_id
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    force=True,
+    filename=f"{time_to_id()}.log",
+)
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -60,9 +68,8 @@ config.update(
         "test_size": len(test_dataset),
     }
 )
-wandb.init(
-    project="cifar10-unlearn", entity="yliu298", config=vars(args), mode=args.wandb
-)
+wandb.init(project="cifar10-unlearn", entity="yliu298", config=config, mode=args.wandb)
+logging.info(config)
 
 train_loader = DataLoader(
     train_dataset,
