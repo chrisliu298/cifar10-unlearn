@@ -43,6 +43,9 @@ parser.add_argument(
 args = parser.parse_args()
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+torch.manual_seed(1337)
+if DEVICE == "cuda":
+    torch.cuda.manual_seed(1337)
 torch.backends.cudnn.deterministic = False
 torch.backends.cudnn.benchmark = True
 
