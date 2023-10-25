@@ -22,7 +22,7 @@ parser.add_argument(
     "--unlearn_method",
     type=str,
     default="ft",
-    choices=["ft", "ga"],
+    choices=["ft", "ga", "rl"],
     help="unlearn method (default: ft)",
 )
 parser.add_argument("--seed", type=int, default=2, help="random seed (default: 2)")
@@ -146,6 +146,18 @@ print(
 )
 
 train_loader = retain_loader if args.unlearn_method == "ft" else forget_loader
+if args.unlearn_method == "rl":
+    from copy import deepcopy
+
+    forget_labels = torch.cat([y for _, y in forget_loader])
+
+    rand_forget_loader = deepcopy(forget_loader)
+    for x, y in rand_forget_loader:
+        y[:] = torch.randint_like(y, 0, 10)
+
+    rand_forget_labels = torch.cat([y for _, y in rand_forget_loader])
+    acc = (forget_labels == rand_forget_labels).float().mean().item()
+    print(f"Random accuracy: {acc:.4f}")
 
 for epoch in trange(args.epochs):
     train(net, optimizer, train_criterion, scheduler, train_loader, DEVICE)
