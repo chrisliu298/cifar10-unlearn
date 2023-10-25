@@ -146,6 +146,10 @@ print(
         "forget_acc": forget_acc,
     }
 )
+
+if args.unlearn_method == "rand_labels":
+    rand_forget_loader = assign_rand_labels(forget_loader)
+
 for epoch in trange(args.epochs):
     if args.unlearn_method == "retrain":
         retrain(net, optimizer, criterion, scheduler, retain_loader, DEVICE)
@@ -154,7 +158,6 @@ for epoch in trange(args.epochs):
     elif args.unlearn_method == "gradient_ascent":
         gradient_ascent(net, optimizer, criterion, scheduler, forget_loader, DEVICE)
     elif args.unlearn_method == "rand_labels":
-        rand_forget_loader = assign_rand_labels(forget_loader)
         rand_labels(net, optimizer, criterion, scheduler, rand_forget_loader, DEVICE)
 
     retain_loss, retain_acc = evaluate(net, criterion, retain_loader, DEVICE)
