@@ -74,6 +74,7 @@ def assign_rand_labels(loader):
 
 
 def assign_second_best_labels(net, loader, device):
+    forget_labels = torch.cat([y for _, y in loader])
     with torch.no_grad():
         net.eval()
         new_loader = deepcopy(loader)
@@ -83,7 +84,10 @@ def assign_second_best_labels(net, loader, device):
             _, indices = logits.topk(2, dim=1)
             second_best_labels = indices[:, 1]
             y[:] = second_best_labels
-        return new_loader
+    second_best_forget_labels = torch.cat([y for _, y in new_loader])
+    acc = (forget_labels == second_best_forget_labels).float().mean().item()
+    print(f"Second best accuracy: {acc:.4f}")
+    return new_loader
 
 
 def time_to_id():
