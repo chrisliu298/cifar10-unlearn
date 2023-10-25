@@ -1,4 +1,3 @@
-import torch
 import wandb
 
 from utils import grad_norm, weight_norm
