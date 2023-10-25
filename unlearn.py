@@ -133,8 +133,9 @@ else:
     raise ValueError(f"Unknown model: {args.model}. Please choose from cnn, resnet18.")
 
 net.to(DEVICE)
-assert os.path.exists("pretrained.pt"), "pretrained.pt does not exist!"
-net.load_state_dict(torch.load("pretrained.pt"))
+if args.unlearn_method != "retrain":
+    assert os.path.exists("pretrained.pt"), "pretrained.pt does not exist!"
+    net.load_state_dict(torch.load("pretrained.pt"))
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(
     net.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.wd
