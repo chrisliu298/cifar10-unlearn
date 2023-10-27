@@ -27,13 +27,6 @@ from utils import (
     time_to_id,
 )
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    force=True,
-    filename=f"{time_to_id()}.log",
-)
-
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--model",
@@ -86,6 +79,13 @@ parser.add_argument(
     help="epsilon for input/grad noise (default: None)",
 )
 args = parser.parse_args()
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    force=True,
+    filename=f"{args.unlearn_method}_{time_to_id()}.log",
+)
 
 if args.unlearn_method in ["input_noise", "grad_noise"]:
     assert args.epsilon is not None, "epsilon must be specified for input/grad noise"
