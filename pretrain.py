@@ -10,7 +10,7 @@ from tqdm import trange
 from dataset import get_cifar10, prepare_splits
 from methods import train
 from model import get_cnn, get_resnet18
-from utils import evaluate, time_to_id
+from utils import Timer, evaluate, time_to_id
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -111,10 +111,13 @@ optimizer = torch.optim.SGD(
 )
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
 
+time_spent = 0.0
 for epoch in trange(args.epochs):
-    train_loss, train_acc = train(
-        net, optimizer, criterion, scheduler, train_loader, DEVICE
-    )
+    with Timer() as t:
+        train_loss, train_acc = train(
+            net, optimizer, criterion, scheduler, train_loader, DEVICE
+        )
+    time_spent += t.elapsed_time
     val_loss, val_acc = evaluate(net, criterion, val_loader, DEVICE)
     test_loss, test_acc = evaluate(net, criterion, test_loader, DEVICE)
     wandb.log(
@@ -129,6 +132,7 @@ for epoch in trange(args.epochs):
             "lr": scheduler.get_last_lr()[0],
         }
     )
+wandb.log({"time_spent": time_spent})
 torch.save(net.state_dict(), f"pretrained.pt")
 wandb.save("pretrained.pt")
 wandb.finish(quiet=True)

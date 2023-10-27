@@ -19,7 +19,13 @@ from methods import (
     second_best_labels,
 )
 from model import get_cnn, get_resnet18
-from utils import assign_rand_labels, assign_second_best_labels, evaluate, time_to_id
+from utils import (
+    Timer,
+    assign_rand_labels,
+    assign_second_best_labels,
+    evaluate,
+    time_to_id,
+)
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -201,22 +207,29 @@ elif args.unlearn_method == "second_best_labels":
     print(next(iter(forget_loader))[1])
     print(next(iter(second_best_forget_loader))[1])
 
+time_spent = 0.0
 for epoch in trange(args.epochs):
-    if args.unlearn_method == "retrain":
-        retrain(net, optimizer, criterion, scheduler, loaders, DEVICE)
-    elif args.unlearn_method == "finetune":
-        finetune(net, optimizer, criterion, scheduler, loaders, DEVICE)
-    elif args.unlearn_method == "gradient_ascent":
-        gradient_ascent(net, optimizer, criterion, scheduler, loaders, DEVICE)
-    elif args.unlearn_method == "rand_labels":
-        rand_labels(net, optimizer, criterion, scheduler, loaders, DEVICE)
-    elif args.unlearn_method == "second_best_labels":
-        second_best_labels(net, optimizer, criterion, scheduler, loaders, DEVICE)
-    elif args.unlearn_method == "image_noise":
-        image_noise(net, optimizer, criterion, scheduler, loaders, DEVICE, args.epsilon)
-    elif args.unlearn_method == "grad_noise":
-        grad_noise(net, optimizer, criterion, scheduler, loaders, DEVICE, args.epsilon)
+    with Timer() as t:
+        if args.unlearn_method == "retrain":
+            retrain(net, optimizer, criterion, scheduler, loaders, DEVICE)
+        elif args.unlearn_method == "finetune":
+            finetune(net, optimizer, criterion, scheduler, loaders, DEVICE)
+        elif args.unlearn_method == "gradient_ascent":
+            gradient_ascent(net, optimizer, criterion, scheduler, loaders, DEVICE)
+        elif args.unlearn_method == "rand_labels":
+            rand_labels(net, optimizer, criterion, scheduler, loaders, DEVICE)
+        elif args.unlearn_method == "second_best_labels":
+            second_best_labels(net, optimizer, criterion, scheduler, loaders, DEVICE)
+        elif args.unlearn_method == "image_noise":
+            image_noise(
+                net, optimizer, criterion, scheduler, loaders, DEVICE, args.epsilon
+            )
+        elif args.unlearn_method == "grad_noise":
+            grad_noise(
+                net, optimizer, criterion, scheduler, loaders, DEVICE, args.epsilon
+            )
 
+    time_spent += t.elapsed_time
     retain_loss, retain_acc = evaluate(net, criterion, retain_loader, DEVICE)
     forget_loss, forget_acc = evaluate(net, criterion, forget_loader, DEVICE)
     val_loss, val_acc = evaluate(net, criterion, val_loader, DEVICE)
@@ -236,5 +249,5 @@ for epoch in trange(args.epochs):
             "lr": scheduler.get_last_lr()[0],
         }
     )
-
+wandb.log({"time_spent": time_spent})
 wandb.finish(quiet=True)

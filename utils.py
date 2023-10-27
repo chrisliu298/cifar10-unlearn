@@ -7,6 +7,16 @@ import numpy as np
 import torch
 
 
+class Timer:
+    def __enter__(self):
+        self.start = time.time()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.end = time.time()
+        self.elapsed_time = self.end - self.start
+
+
 class ControlledSeed:
     def __init__(self, seed):
         self.seed = seed
