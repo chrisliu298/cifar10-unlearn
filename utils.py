@@ -65,7 +65,7 @@ def evaluate(net, criterion, loader, device):
         logits = net(x)
         loss = criterion(logits, y)
         loss += loss.item()
-        acc += (logits.argmax(dim=-1) == y).float().mean().item()
+        acc += accuracy(logits.argmax(dim=-1), y)
     loss /= len(loader)
     acc /= len(loader)
     return loss, acc
