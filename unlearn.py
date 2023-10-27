@@ -139,9 +139,8 @@ else:
     raise ValueError(f"Unknown model: {args.model}. Please choose from cnn, resnet18.")
 
 net.to(DEVICE)
-if args.unlearn_method != "retrain":
-    assert os.path.exists("pretrained.pt"), "pretrained.pt does not exist!"
-    net.load_state_dict(torch.load("pretrained.pt"))
+assert os.path.exists("pretrained.pt"), "pretrained.pt does not exist!"
+net.load_state_dict(torch.load("pretrained.pt"))
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(
     net.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.wd
@@ -164,28 +163,36 @@ logging.debug(
     }
 )
 
+loaders = {
+    "train": train_loader,
+    "val": val_loader,
+    "test": test_loader,
+    "retain": retain_loader,
+    "forget": forget_loader,
+}
+
 if args.unlearn_method == "rand_labels":
     rand_forget_loader = assign_rand_labels(forget_loader)
+    loaders["rand_forget"] = rand_forget_loader
     print(next(iter(forget_loader))[1])
     print(next(iter(rand_forget_loader))[1])
 elif args.unlearn_method == "second_best_labels":
     second_best_forget_loader = assign_second_best_labels(net, forget_loader, DEVICE)
+    loaders["second_best_forget"] = second_best_forget_loader
     print(next(iter(forget_loader))[1])
     print(next(iter(second_best_forget_loader))[1])
 
 for epoch in trange(args.epochs):
     if args.unlearn_method == "retrain":
-        retrain(net, optimizer, criterion, scheduler, retain_loader, DEVICE)
+        retrain(net, optimizer, criterion, scheduler, loaders, DEVICE)
     elif args.unlearn_method == "finetune":
-        finetune(net, optimizer, criterion, scheduler, retain_loader, DEVICE)
+        finetune(net, optimizer, criterion, scheduler, loaders, DEVICE)
     elif args.unlearn_method == "gradient_ascent":
-        gradient_ascent(net, optimizer, criterion, scheduler, forget_loader, DEVICE)
+        gradient_ascent(net, optimizer, criterion, scheduler, loaders, DEVICE)
     elif args.unlearn_method == "rand_labels":
-        rand_labels(net, optimizer, criterion, scheduler, rand_forget_loader, DEVICE)
+        rand_labels(net, optimizer, criterion, scheduler, loaders, DEVICE)
     elif args.unlearn_method == "second_best_labels":
-        second_best_labels(
-            net, optimizer, criterion, scheduler, second_best_forget_loader, DEVICE
-        )
+        second_best_labels(net, optimizer, criterion, scheduler, loaders, DEVICE)
 
     retain_loss, retain_acc = evaluate(net, criterion, retain_loader, DEVICE)
     forget_loss, forget_acc = evaluate(net, criterion, forget_loader, DEVICE)
