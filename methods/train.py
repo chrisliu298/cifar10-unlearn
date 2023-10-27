@@ -1,6 +1,6 @@
 import wandb
 
-from ..utils import accuracy, grad_norm, weight_norm
+from utils import accuracy, grad_norm, weight_norm
 
 
 def train(net, optimizer, criterion, scheduler, loaders, device):

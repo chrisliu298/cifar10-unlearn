@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import Subset
+from torchutils.data import Subset
 from torchvision import datasets, transforms
 
 from utils import ControlledSeed

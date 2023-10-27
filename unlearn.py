@@ -5,7 +5,7 @@ import os
 import torch
 import torch.nn as nn
 import wandb
-from torch.utils.data import DataLoader
+from torchutils.data import DataLoader
 from tqdm import trange
 
 from dataset import get_cifar10, prepare_splits

@@ -1,6 +1,6 @@
 import wandb
 
-from ..utils import accuracy, gaussian_noise, grad_norm, weight_norm
+from utils import accuracy, gaussian_noise, grad_norm, weight_norm
 
 
 def input_noise(net, optimizer, criterion, scheduler, loaders, device, epsilon):
