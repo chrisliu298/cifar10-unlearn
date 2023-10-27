@@ -200,13 +200,13 @@ logging.debug(
 if args.unlearn_method == "rand_labels":
     rand_forget_loader = assign_rand_labels(forget_loader)
     loaders["rand_forget"] = rand_forget_loader
-    print(next(iter(forget_loader))[1])
-    print(next(iter(rand_forget_loader))[1])
+    logging.debug(next(iter(forget_loader))[1])
+    logging.debug(next(iter(rand_forget_loader))[1])
 elif args.unlearn_method == "second_best_labels":
     second_best_forget_loader = assign_second_best_labels(net, forget_loader, DEVICE)
     loaders["second_best_forget"] = second_best_forget_loader
-    print(next(iter(forget_loader))[1])
-    print(next(iter(second_best_forget_loader))[1])
+    logging.debug(next(iter(forget_loader))[1])
+    logging.debug(next(iter(second_best_forget_loader))[1])
 
 time_spent = 0.0
 for epoch in trange(args.epochs):

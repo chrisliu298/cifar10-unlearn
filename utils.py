@@ -1,3 +1,4 @@
+import logging
 import random
 import time
 from copy import deepcopy
@@ -79,7 +80,7 @@ def assign_rand_labels(loader):
 
     rand_forget_labels = torch.cat([y for _, y in rand_loader])
     acc = (forget_labels == rand_forget_labels).float().mean().item()
-    print(f"Random accuracy: {acc:.4f}")
+    logging.info(f"Random accuracy: {acc:.4f}")
     return rand_loader
 
 
@@ -96,7 +97,7 @@ def assign_second_best_labels(net, loader, device):
             y[:] = second_best_labels
     second_best_forget_labels = torch.cat([y for _, y in new_loader])
     acc = (forget_labels == second_best_forget_labels).float().mean().item()
-    print(f"Second best accuracy: {acc:.4f}")
+    logging.info(f"Second best accuracy: {acc:.4f}")
     return new_loader
 
 
