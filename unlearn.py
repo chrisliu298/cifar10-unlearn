@@ -13,7 +13,7 @@ from methods import (
     finetune,
     grad_noise,
     gradient_ascent,
-    image_noise,
+    input_noise,
     rand_labels,
     retrain,
     second_best_labels,
@@ -51,7 +51,7 @@ parser.add_argument(
         "gradient_ascent",
         "rand_labels",
         "second_best_labels",
-        "image_noise",
+        "input_noise",
         "grad_noise",
     ],
     required=True,
@@ -87,7 +87,7 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-if args.unlearn_method in ["image_noise", "grad_noise"]:
+if args.unlearn_method in ["input_noise", "grad_noise"]:
     assert args.epsilon is not None, "epsilon must be specified for image/grad noise"
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -221,8 +221,8 @@ for epoch in trange(args.epochs):
             rand_labels(net, optimizer, criterion, scheduler, loaders, DEVICE)
         elif args.unlearn_method == "second_best_labels":
             second_best_labels(net, optimizer, criterion, scheduler, loaders, DEVICE)
-        elif args.unlearn_method == "image_noise":
-            image_noise(
+        elif args.unlearn_method == "input_noise":
+            input_noise(
                 net, optimizer, criterion, scheduler, loaders, DEVICE, args.epsilon
             )
         elif args.unlearn_method == "grad_noise":
