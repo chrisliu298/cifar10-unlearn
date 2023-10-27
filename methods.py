@@ -28,10 +28,6 @@ def train(net, optimizer, criterion, scheduler, loaders, device):
 
 
 def retrain(net, optimizer, criterion, scheduler, loaders, device):
-    from torchvision.models import resnet18
-
-    net = resnet18(num_classes=10)
-    net.to(device)
     loader = loaders["retain"]
     net.train()
     loss, acc = 0, 0
