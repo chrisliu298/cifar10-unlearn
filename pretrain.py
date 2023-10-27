@@ -111,15 +111,21 @@ optimizer = torch.optim.SGD(
 )
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
 
+loaders = {
+    "train": train_loader,
+    "val": val_loader,
+    "test": test_loader,
+}
+
 time_spent = 0.0
 for epoch in trange(args.epochs):
     with Timer() as t:
         train_loss, train_acc = train(
-            net, optimizer, criterion, scheduler, train_loader, DEVICE
+            net, optimizer, criterion, scheduler, loaders, DEVICE
         )
     time_spent += t.elapsed_time
-    val_loss, val_acc = evaluate(net, criterion, val_loader, DEVICE)
-    test_loss, test_acc = evaluate(net, criterion, test_loader, DEVICE)
+    val_loss, val_acc = evaluate(net, criterion, loaders["val"], DEVICE)
+    test_loss, test_acc = evaluate(net, criterion, loaders["test"], DEVICE)
     wandb.log(
         {
             "epoch": epoch,

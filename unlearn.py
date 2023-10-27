@@ -156,6 +156,14 @@ test_loader = DataLoader(
     pin_memory=True,
 )
 
+loaders = {
+    "train": train_loader,
+    "val": val_loader,
+    "test": test_loader,
+    "retain": retain_loader,
+    "forget": forget_loader,
+}
+
 if args.model == "cnn":
     net = get_cnn(10)
 elif args.model == "resnet18":
@@ -173,11 +181,11 @@ optimizer = torch.optim.SGD(
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
 
 # Evaluate on all splits before training
-_, train_acc = evaluate(net, criterion, train_loader, DEVICE)
-_, val_acc = evaluate(net, criterion, val_loader, DEVICE)
-_, test_acc = evaluate(net, criterion, test_loader, DEVICE)
-_, retain_acc = evaluate(net, criterion, retain_loader, DEVICE)
-_, forget_acc = evaluate(net, criterion, forget_loader, DEVICE)
+_, train_acc = evaluate(net, criterion, loaders["train"], DEVICE)
+_, val_acc = evaluate(net, criterion, loaders["val"], DEVICE)
+_, test_acc = evaluate(net, criterion, loaders["test"], DEVICE)
+_, retain_acc = evaluate(net, criterion, loaders["retain"], DEVICE)
+_, forget_acc = evaluate(net, criterion, loaders["forget"], DEVICE)
 logging.debug(
     {
         "train_acc": train_acc,
@@ -187,14 +195,6 @@ logging.debug(
         "forget_acc": forget_acc,
     }
 )
-
-loaders = {
-    "train": train_loader,
-    "val": val_loader,
-    "test": test_loader,
-    "retain": retain_loader,
-    "forget": forget_loader,
-}
 
 if args.unlearn_method == "rand_labels":
     rand_forget_loader = assign_rand_labels(forget_loader)
