@@ -94,3 +94,21 @@ def time_to_id():
     # Get the current time in nanoseconds
     nanoseconds = int(time.time() * 1e9)
     return str(nanoseconds)
+
+
+def accuracy(preds, labels):
+    return (preds == labels).float().mean().item()
+
+
+@torch.no_grad()
+def add_image_noise(x, epsilon):
+    noise = torch.normal(0, 1, x.shape).to(x.device) * epsilon
+    x.add_(noise)
+
+
+@torch.no_grad()
+def add_grad_noise(grad, epsilon):
+    noise = (
+        torch.normal(0, 1, grad.shape, dtype=grad.dtype, device=grad.device) * epsilon
+    )
+    grad.add_(noise)

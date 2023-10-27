@@ -9,7 +9,15 @@ from torch.utils.data import DataLoader
 from tqdm import trange
 
 from dataset import get_cifar10, prepare_splits
-from methods import finetune, gradient_ascent, rand_labels, retrain, second_best_labels
+from methods import (
+    finetune,
+    grad_noise,
+    gradient_ascent,
+    image_noise,
+    rand_labels,
+    retrain,
+    second_best_labels,
+)
 from model import get_cnn, get_resnet18
 from utils import assign_rand_labels, assign_second_best_labels, evaluate, time_to_id
 
@@ -37,6 +45,8 @@ parser.add_argument(
         "gradient_ascent",
         "rand_labels",
         "second_best_labels",
+        "image_noise",
+        "grad_noise",
     ],
     required=True,
     help="unlearn method (default: finetune)",
@@ -63,7 +73,16 @@ parser.add_argument(
     choices=["online", "offline"],
     help="wandb mode (default: offline)",
 )
+parser.add_argument(
+    "--epsilon",
+    type=float,
+    default=None,
+    help="epsilon for image/grad noise (default: None)",
+)
 args = parser.parse_args()
+
+if args.unlearn_method in ["image_noise", "grad_noise"]:
+    assert args.epsilon is not None, "epsilon must be specified for image/grad noise"
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 torch.backends.cudnn.deterministic = False
@@ -193,6 +212,10 @@ for epoch in trange(args.epochs):
         rand_labels(net, optimizer, criterion, scheduler, loaders, DEVICE)
     elif args.unlearn_method == "second_best_labels":
         second_best_labels(net, optimizer, criterion, scheduler, loaders, DEVICE)
+    elif args.unlearn_method == "image_noise":
+        image_noise(net, optimizer, criterion, scheduler, loaders, DEVICE, args.epsilon)
+    elif args.unlearn_method == "grad_noise":
+        grad_noise(net, optimizer, criterion, scheduler, loaders, DEVICE, args.epsilon)
 
     retain_loss, retain_acc = evaluate(net, criterion, retain_loader, DEVICE)
     forget_loss, forget_acc = evaluate(net, criterion, forget_loader, DEVICE)
