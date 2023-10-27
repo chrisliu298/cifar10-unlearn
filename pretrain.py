@@ -16,7 +16,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s - %(levelname)s - %(message)s",
     force=True,
-    filename=f"{time_to_id()}.log",
+    filename=f"pretrain_{time_to_id()}.log",
 )
 
 parser = argparse.ArgumentParser()
