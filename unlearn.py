@@ -64,7 +64,7 @@ parser.add_argument(
     "--epochs", type=int, default=30, help="number of epochs (default: 30)"
 )
 parser.add_argument(
-    "--batch_size", type=int, default=32, help="batch size (default: 32)"
+    "--batch_size", type=int, default=128, help="batch size (default: 128)"
 )
 parser.add_argument(
     "--wd", type=float, default=5e-4, help="weight decay (default: 5e-4)"
@@ -83,12 +83,12 @@ parser.add_argument(
     "--epsilon",
     type=float,
     default=None,
-    help="epsilon for image/grad noise (default: None)",
+    help="epsilon for input/grad noise (default: None)",
 )
 args = parser.parse_args()
 
 if args.unlearn_method in ["input_noise", "grad_noise"]:
-    assert args.epsilon is not None, "epsilon must be specified for image/grad noise"
+    assert args.epsilon is not None, "epsilon must be specified for input/grad noise"
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 torch.backends.cudnn.deterministic = False
