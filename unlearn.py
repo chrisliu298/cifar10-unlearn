@@ -54,7 +54,7 @@ parser.add_argument(
     "--lr", type=float, default=1e-1, help="learning rate (default: 1e-1)"
 )
 parser.add_argument(
-    "--epochs", type=int, default=30, help="number of epochs (default: 30)"
+    "--epochs", type=int, default=10, help="number of epochs (default: 10)"
 )
 parser.add_argument(
     "--batch_size", type=int, default=128, help="batch size (default: 128)"
