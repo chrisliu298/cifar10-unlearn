@@ -4,7 +4,7 @@ from utils import accuracy, grad_norm, weight_norm
 
 
 def second_best_labels(net, optimizer, criterion, scheduler, loaders, device):
-    loader = loaders["second_best_labels"]
+    loader = loaders["second_best_forget"]
     net.train()
     loss, acc = 0, 0
     for x, y in loader:

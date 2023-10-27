@@ -4,7 +4,7 @@ from utils import accuracy, grad_norm, weight_norm
 
 
 def rand_labels(net, optimizer, criterion, scheduler, loaders, device):
-    loader = loaders["rand_labels"]
+    loader = loaders["rand_forget"]
     net.train()
     loss, acc = 0, 0
     for x, y in loader:
