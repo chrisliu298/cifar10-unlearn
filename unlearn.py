@@ -73,6 +73,12 @@ parser.add_argument(
     help="wandb mode (default: offline)",
 )
 parser.add_argument(
+    "--num_forget",
+    type=int,
+    default=5000,
+    help="number of forget samples (default: 5000)",
+)
+parser.add_argument(
     "--epsilon",
     type=float,
     default=None,
@@ -95,8 +101,10 @@ torch.backends.cudnn.deterministic = False
 torch.backends.cudnn.benchmark = True
 
 train_dataset, test_dataset = get_cifar10()
+num_val, num_forget = 5000, args.num_forget
+num_retain = len(train_dataset) - num_val - num_forget
 train_dataset, val_dataset, retain_dataset, forget_dataset = prepare_splits(
-    train_dataset
+    train_dataset, [num_val, num_retain, num_forget]
 )
 config = vars(args)
 config.update(
